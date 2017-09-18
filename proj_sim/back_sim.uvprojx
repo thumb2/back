@@ -273,6 +273,53 @@
       <Groups>
         <Group>
           <GroupName>Source Files</GroupName>
+          <GroupOption>
+            <CommonProperty>
+              <UseCPPCompiler>0</UseCPPCompiler>
+              <RVCTCodeConst>0</RVCTCodeConst>
+              <RVCTZI>0</RVCTZI>
+              <RVCTOtherData>0</RVCTOtherData>
+              <ModuleSelection>0</ModuleSelection>
+              <IncludeInBuild>2</IncludeInBuild>
+              <AlwaysBuild>2</AlwaysBuild>
+              <GenerateAssemblyFile>2</GenerateAssemblyFile>
+              <AssembleAssemblyFile>2</AssembleAssemblyFile>
+              <PublicsOnly>2</PublicsOnly>
+              <StopOnExitCode>11</StopOnExitCode>
+              <CustomArgument></CustomArgument>
+              <IncludeLibraryModules></IncludeLibraryModules>
+              <ComprImg>1</ComprImg>
+            </CommonProperty>
+            <GroupArm>
+              <Carm>
+                <arpcs>2</arpcs>
+                <stkchk>2</stkchk>
+                <reentr>2</reentr>
+                <interw>2</interw>
+                <bigend>2</bigend>
+                <Strict>0</Strict>
+                <Optim>0</Optim>
+                <wLevel>0</wLevel>
+                <uThumb>1</uThumb>
+                <VariousControls>
+                  <MiscControls></MiscControls>
+                  <Define></Define>
+                  <Undefine></Undefine>
+                  <IncludePath></IncludePath>
+                </VariousControls>
+              </Carm>
+              <Aarm>
+                <bBE>2</bBE>
+                <interw>2</interw>
+                <VariousControls>
+                  <MiscControls></MiscControls>
+                  <Define>FOR_SIMULATION</Define>
+                  <Undefine></Undefine>
+                  <IncludePath></IncludePath>
+                </VariousControls>
+              </Aarm>
+            </GroupArm>
+          </GroupOption>
           <Files>
             <File>
               <FileName>system_LPC11xx.c</FileName>
@@ -292,7 +339,7 @@
             <File>
               <FileName>back.s</FileName>
               <FileType>2</FileType>
-              <FilePath>.\Src\back.s</FilePath>
+              <FilePath>..\src\back.s</FilePath>
             </File>
           </Files>
         </Group>
