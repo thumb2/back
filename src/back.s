@@ -100,7 +100,8 @@ _fini:
     .thumb
     .thumb_func
     .long back_setup + thumb_code_flag_bit
-    .long back_loop + thumb_code_flag_bit            
+    .long back_loop + thumb_code_flag_bit
+    .globl back_setup
 back_setup:
     @@ Save callee-save registers
     push {r4-r7, lr}
@@ -200,17 +201,8 @@ init_code_offset:
     .ltorg
 loop_hash_const:
     .int 0x96078804
-    .ltorg    
-
-button_handler:
-    push {r4-r7, lr}
-    movs r0, #55
-    ldr r2, =var_cfunc_table
-    ldr r2, [r2]             
-    ldr r2, [r2, #4]    
-    bx r2
-    pop {r4-r7, pc}
     .ltorg
+    
 back_loop:
     push {r4-r7, lr}    
     @@ Save caller sp

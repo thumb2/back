@@ -35,7 +35,7 @@ MEMORY
  *   __stack
  */
 
-ENTRY(back_init)
+ENTRY(back_setup)
 
 SECTIONS
 {

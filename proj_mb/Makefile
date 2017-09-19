@@ -8,7 +8,7 @@ build/back.o:  $(SRC) $(FORTH_SRC)
 	arm-none-eabi-as -mthumb $(SRC) -o $@
 
 build/back.elf:  build/back.o
-	arm-none-eabi-ld  -M=build/back.map -T/home/back/back/gcc_arm.ld build/back.o -o build/back.elf
+	arm-none-eabi-ld  -M=build/back.map -T./gcc_arm.ld build/back.o -o build/back.elf
 
 build/back.hex: build/back.elf
 	@echo Preparing: $@
