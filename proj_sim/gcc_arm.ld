@@ -154,11 +154,11 @@ SECTIONS
 	} > BACK_RAM
 
 
-    .dict_field 0x00020000 :
+    .dict_field 0x00026000 :
     {
         KEEP (*(.dict_field))
     } >BACK_FLASH
-    .code_field 0x00022000 :
+    .code_field 0x00028000 :
     {
         __code_start__ = .;    
         KEEP (*(.code_field))

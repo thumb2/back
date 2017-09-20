@@ -91,11 +91,7 @@ _fini:
 	psp	.req	r7
 
     .set thumb_code_flag_bit, 1
-    .ifdef FOR_SIMULATION
-    .set code_offset_ram_to_flash, (0x20004000 - 0x22000)
-    .else
     .set code_offset_ram_to_flash, (0x20004000 - 0x28000)
-    .endif
 	.section .dict_field,"a",%progbits
     .thumb
     .thumb_func

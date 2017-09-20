@@ -81,7 +81,7 @@ int main (void)
     int i;
     volatile forth_table* ft;
     
-    ft = (void *)0x20000;
+    ft = (void *)0x26000;
     
 //    init = (void*)*addr;
     SystemCoreClockUpdate();
