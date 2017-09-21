@@ -1,8 +1,14 @@
     .syntax unified
     .arch armv6-m
-
+    @@ Memory map (RAM)
+    @@ 8000(512B) return stack top, full descending
+    @@ 7C00(512B) paramter stack top, empty increasing
+    @@ 7B00(128B) heap
+    @@ 7000(2k)   temp input buffer
+    @@ 6000(4k)   source code buffer
+    @@ 4000(8k)   code region 
     .section .return_stack
-    .equ return_stack_size, 0x200
+    .equ return_stack_size, 0x400 @ In fact it is the total size of r&p.
     .globl __return_stack_top
     .globl __return_stack_limit
 __return_stack_limit:
@@ -12,7 +18,7 @@ __return_stack_top:
     .size  __return_stack_top, . - __return_stack_top
     
     .section .param_stack
-    .equ param_stack_size, 0x200
+    .equ param_stack_size, 0x200 @ In fact the size is useless.
     .globl __param_stack_top
     .globl __param_stack_limit
 __param_stack_limit:

@@ -170,6 +170,19 @@ SECTIONS
         KEEP (*(.ram_field))
     } >BACK_RAM
 
+    .ram_source_field 0x20006000 :
+    {
+        __ram_source_start__ = .;    
+        KEEP (*(.ram_source_field))
+    } >BACK_RAM
+
+    .ram_input_buffer_field 0x20007000 :
+    {
+        __ram_input_buffer_start__ = .;    
+        KEEP (*(.ram_input_buffer_field))
+    } >BACK_RAM
+
+
 
 	/* Set stack top to end of RAM, and stack limit move down by
 	 * size of stack_dummy section */

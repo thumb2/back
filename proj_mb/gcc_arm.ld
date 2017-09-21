@@ -74,4 +74,12 @@ SECTIONS
 
 	/* Set stack top to end of RAM, and stack limit move down by
 	 * size of stack_dummy section */
+	__return_stack_top = ORIGIN(BACK_RAM) + LENGTH(BACK_RAM);
+	__return_stack_limit = __return_stack_top - SIZEOF(.return_stack_dummy);
+	PROVIDE(__return_stack = __return_stack_top);
+    
+	__param_stack_top = ORIGIN(BACK_RAM) + LENGTH(BACK_RAM) - SIZEOF(.return_stack_dummy);
+	__param_stack_limit = __param_stack_top - SIZEOF(.param_stack_dummy);
+	PROVIDE(__param_stack = __param_stack_top);
+
 }
