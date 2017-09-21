@@ -17,6 +17,14 @@
 : skip-string begin 1+ dup c@ ascii " = until 1+ inp ! ;
 : ." immediate state if inp @ output 1+ inp ! else compile lit inp @ , compile output inp @ skip-string then ;
 
+: does> here latest @ 12 + ! 0xb500 h, compile lit latest @ 16 + , ;
+
+: var immediate create 0 , does> compile exit ;
+
+
 : welcome ." It's Mickey Board. I'm BACK, initiated in&by Thumb2." ;
 : test_ascii ascii A emit ;
-: loop begin  test_ascii welcome loop_exit again ;
+var var_test 
+: loop begin  0x38 var_test ! var_test @  emit loop_exit again ;
+
+

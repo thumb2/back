@@ -383,6 +383,12 @@ not_equal:
     ldr top, =var_inp
     next
 
+    @@ ( -- 32b) top = latest
+    defcode "latest", 0x27c14b06, 0, latest
+    pushpsp top
+    ldr top, =var_latest
+    next
+
     @@ ( a b -- a ) drop
     defcode "drop", 0x8463cb04, 0, drop
     poppsp top
@@ -617,12 +623,11 @@ zero_branch_jump:
     poppsp top    
     adds r1, r1, #4
     blx r1
-    
+
     @@ Start of word compiling
     defword ":", 0x00003a01, F_IMMED, colon
     @@ Save context first, in case of broken compiling
     bl code_save_context
-    bl code_word
     bl code_create
     bl code_half_lit
     docol
@@ -661,6 +666,7 @@ zero_branch_jump:
     
     @@ ( -- ) Create a dict header 
     defword "create", 0xe69ddc06, 0, create
+    bl code_word    
     @@ Put link into dict header 
     ldr r1, =var_latest
     ldr r2, [r1]
