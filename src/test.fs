@@ -19,12 +19,14 @@
 
 : does> here latest @ 12 + ! 0xb500 h, compile lit latest @ 16 + , ;
 
-: var immediate create 0 , does> compile exit ;
-
+: variable immediate create 0 , does> compile exit ;
+: array immediate create allot  does> compile + compile exit ;
 
 : welcome ." It's Mickey Board. I'm BACK, initiated in&by Thumb2." ;
 : test_ascii ascii A emit ;
-var var_test 
-: loop begin  0x38 var_test ! var_test @  emit loop_exit again ;
+variable var_test
+8 array array_test
+
+: loop begin  0x38 1 array_test c! 1 array_test c@  emit loop_exit again ;
 
 

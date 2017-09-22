@@ -359,8 +359,16 @@ not_equal:
     ldrb top, [top]
     next
 
-    @@ TBD
+    @@ (here-to-move-in-byte -- )
     defcode "allot", 0x47532205, 0, allot
+    ldr r1, =var_here
+    ldr r2, [r1]
+    adds top, #1                @ Align top to 2
+    lsrs top, #1
+    lsls top, #1
+    adds r2, top
+    str  r2, [r1]
+    poppsp top
     next
     
     @@ ( -- 32b) top = *here
