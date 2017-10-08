@@ -409,8 +409,25 @@ not_equal:
     movs top, r1
     next
 
+    @@ ( a b -- a b a) over
+    defcode "over", 0xfec07c04, 0, over
+    pushpsp top
+    movs r2, #8
+    subs r1, psp, r2
+    ldr top, [r1]
+    next
+
     @@ ( a -- a a) dup
     defcode "dup", 0x1a6bd303, 0, dup
+    pushpsp top
+    next
+
+    @@ ( a -- 0 | a a) dup
+    defcode "?dup", 0x8b84f804, 0, qdup
+    cmp top, #0
+    bne qdup_push
+    next
+qdup_push:  
     pushpsp top
     next
 

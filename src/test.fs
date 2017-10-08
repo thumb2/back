@@ -12,6 +12,12 @@
 : while immediate compile ?branch >mark ;
 : repeat immediate swap compile branch <resolve >resolve ;
 
+: case immediate 0 ;
+: endcase immediate compile drop begin ?dup while >resolve repeat ;
+: of immediate compile over compile = compile ?branch >mark compile drop ;
+: endof immediate compile branch >mark swap >resolve ;
+
+
 : emit begin report while loop_exit repeat ;
 : output begin 1+ dup c@ ascii " = not while dup c@ emit repeat drop ;
 : skip-string begin 1+ dup c@ ascii " = until 1+ inp ! ;
@@ -27,6 +33,14 @@
 variable var_test
 8 array array_test
 
-: loop begin  0x38 1 array_test c! 1 array_test c@  emit loop_exit again ;
+: case_test
+    5 case
+        3 of ." it's 3 " endof
+        4 of ." it's 4 " endof
+        ." it's not 3 or 4 "
+    endcase
+;
+
+: loop begin  case_test  loop_exit again ;
 
 
