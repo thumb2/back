@@ -14,6 +14,11 @@
 
 #include "LPC11xx.h"                    // Device header
 
+#define KEY_FIFO_LEN 16
+char key_fifo[KEY_FIFO_LEN + 2];
+char *pwp;
+char *prp;
+
 /*************** System Initialization ***************/
 void uart_init()
 {
@@ -35,6 +40,12 @@ void uart_init()
     LPC_UART->DLM=0x0;
     /* Clear DLAB */
     LPC_UART->LCR=0x3;
+
+    pwp = &(key_fifo[KEY_FIFO_LEN]);
+    *pwp = 0;
+    prp = &(key_fifo[KEY_FIFO_LEN + 1]);
+    *prp = 0;
+    
 }
 /*********************************************************/
 /*----------------------------------------------------------------------------
@@ -49,6 +60,11 @@ typedef struct forth_table
     
 }forth_table;
 
+char get_char(void)
+{
+    if (!(LPC_UART->LSR & 0x01)) return 0;
+    return LPC_UART->RBR;
+}
 
 int const test(int i) 
 {
@@ -71,13 +87,56 @@ int const (* const func[4])(int) =
 {
     test + 1,
     test1 + 1,
-    0,
+    (void *)key_fifo,
     0
 };
 
+void put_char_to_input_buffer(char ch) 
+{
+    if (((*prp - *pwp) & (KEY_FIFO_LEN - 1)) != 1) {
+        key_fifo[(*pwp)++] = ch;
+        if (*pwp >= KEY_FIFO_LEN) *pwp = 0;
+    }
+}
+
+
+int to_input_buffer(char ch) 
+{
+    static int state;
+    
+    if (ch) {
+        switch (state) {
+        case 0:
+            if (ch == 0x1b) {
+                /* ESC */
+                state = 1;
+            } else {
+                put_char_to_input_buffer(ch);
+            }
+            break;
+        case 1:
+            if (ch == 0x5b) {
+                /* [ */
+                state = 2;
+            } else {
+                state = 0;
+            }
+            break;
+        case 2:
+            if (ch == 0x44) {
+                put_char_to_input_buffer(0x01);
+            } else if (ch == 0x43) {
+                put_char_to_input_buffer(0x02);
+            }
+            state = 0;
+            break;
+        }
+    }
+}
 
 int main (void)
 {
+    char ch;
     int i;
     volatile forth_table* ft;
     
@@ -89,6 +148,15 @@ int main (void)
     i = ft->back_setup((void*)func);
     while (1) {
         ft->back_loop(&i);
+        ch = get_char();
+        to_input_buffer(ch);
+        
+        /* if (ch) { */
+        /*     test((ch >> 4) >= 10 ? ((ch >> 4) - 10) + 'A' : (ch >> 4) + '0'); */
+        /*     test((ch & 0x0F) >= 10 ? ((ch & 0x0F) - 10) + 'A' : (ch & 0x0F) + '0');             */
+        /* } */
+        
+        
 //        LPC_UART->THR = i;
     }
 }

@@ -56,6 +56,13 @@ var_saved_outp:
     .int 0
 var_cfunc_table:
     .int 0
+var_key_fifo:
+    .int 0
+var_key_fifo_pwp:
+    .int 0
+var_key_fifo_prp:
+    .int 0
+    
 
 	.macro next
     bx lr   
@@ -110,6 +117,15 @@ back_setup:
     @@ Save api func table
     ldr r2, =var_cfunc_table
     str r0, [r2]
+    ldr r3, [r0, #8]
+    ldr r2, =var_key_fifo
+    str r3, [r2]
+    ldr r2, =var_key_fifo_pwp
+    adds r3, r3, #16
+    str r3, [r2]
+    ldr r2, =var_key_fifo_prp    
+    adds r3, r3, #1
+    str r3, [r2]    
     @@ Copy code from flash to ram
     ldr    r2, =__code_start__
     ldr    r3, =__ram_start__
@@ -277,7 +293,7 @@ main_loop:
     @@ (a b -- a-b )
     defcode "-", 0x00002d01, 0, minus
     poppsp r1
-    adds top, r1, top
+    subs top, r1, top
     next
 
     @@ (a b -- a==b? )
@@ -288,6 +304,42 @@ main_loop:
     movs top, #0    
     next    
 equal_equal:
+    movs top, #0        
+    mvns top, top
+    next
+
+    @@ (a b -- a <>b? )
+    defcode "<>", 0x001ef202, 0, not_equal
+    poppsp r1
+    cmp r1, top
+    bne not_equal_equal
+    movs top, #0    
+    next    
+not_equal_equal:
+    movs top, #0        
+    mvns top, top
+    next
+
+    @@ (a b -- b < a? )
+    defcode "<", 0x00003c01, 0, less_than
+    poppsp r1
+    cmp r1, top
+    blt less_than_true
+    movs top, #0    
+    next    
+less_than_true:
+    movs top, #0        
+    mvns top, top
+    next
+
+    @@ (a b -- b > a? )
+    defcode ">", 0x00003e01, 0, more_than
+    poppsp r1
+    cmp top, r1
+    blt more_than_true
+    movs top, #0    
+    next    
+more_than_true:
     movs top, #0        
     mvns top, top
     next
@@ -718,6 +770,27 @@ zero_branch_jump:
     defcode ">cfa", 0x68ec9804, , to_cfa
     adds top, top, #12
     ldr top, [top]
+    next
+
+    @@ ( -- key_fifo )
+    defcode "kf", 0x00372702, , kf
+    pushpsp top
+    ldr r1, =var_key_fifo
+    ldr top, [r1]
+    next
+    
+    @@ ( -- key_fifo_pwp )
+    defcode "kf_pwp", 0x9a8b2106, , kf_pwp
+    pushpsp top
+    ldr r1, =var_key_fifo_pwp
+    ldr top, [r1]
+    next
+    
+    @@ ( -- key_fifo_prp )
+    defcode "kf_prp", 0x9a889206, , kf_prp
+    pushpsp top
+    ldr r1, =var_key_fifo_prp
+    ldr top, [r1]
     next
     
     @@ (cfa -- machine_code_bl at here)

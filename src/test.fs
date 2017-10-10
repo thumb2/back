@@ -34,13 +34,21 @@ variable var_test
 8 array array_test
 
 : case_test
-    5 case
-        3 of ." it's 3 " endof
+    kf_pwp c@ case
+        0 of ." it's 0 " endof
         4 of ." it's 4 " endof
         ." it's not 3 or 4 "
     endcase
 ;
 
-: loop begin  case_test  loop_exit again ;
+: input_buffer_get_char
+    begin kf_pwp c@ kf_prp c@ <> while
+            kf kf_prp c@ + c@ emit
+            kf_prp dup c@ 1+ dup 16 = if 16 - then swap c!
+    repeat
+;
+
+            
+: loop begin  input_buffer_get_char  loop_exit again ;
 
 
