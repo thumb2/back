@@ -41,14 +41,96 @@ variable var_test
     endcase
 ;
 
+: input_buffer_can_move_left?
+    input_buffer_cursor dup @    
+    input_buffer_begin @
+    <
+;
+
+: input_buffer_can_move_right?
+    input_buffer_cursor dup @    
+    input_buffer_end @
+    >
+;
+
+: input_buffer_move_left
+    input_buffer_can_move_left? if
+        input_buffer_cursor dup @ 1- swap !
+    then
+;
+
+: input_buffer_move_right
+    input_buffer_can_move_right? if
+        input_buffer_cursor dup @ 1+ swap !
+    then
+;
+
+: input_buffer_insert
+    dup emit
+    input_buffer_cursor @
+    input_buffer_end dup @ 1+ dup rot !
+    begin over over <> while
+            dup 1- dup c@ rot c!
+    repeat
+    drop 
+    c!
+    input_buffer_cursor dup @ 1+ swap !
+;
+
+: input_buffer_raw_delete
+    begin over over <> while
+            dup 1+ dup c@ rot c!
+    repeat
+    drop drop
+    input_buffer_end dup @ 1- swap !
+;
+: input_buffer_delete
+    input_buffer_end @
+    input_buffer_cursor @
+    input_buffer_raw_delete
+;
+
+: input_buffer_backspace
+    input_buffer_can_move_left? if 
+        input_buffer_end @
+        input_buffer_cursor @ 1- dup rot !
+        input_buffer_raw_delete        
+    then
+;
+
+: input_buffer_enter
+    0x0a
+    input_buffer_insert    
+    0x0d
+    input_buffer_insert    
+    input_buffer_begin @ 
+    inp !
+    begin interpret until
+    input_buffer_begin @
+    dup input_buffer_end !    
+    dup input_buffer_cursor !
+    0 swap c!
+;
+
+
+: input_buffer_process
+    case
+        0x0d of input_buffer_enter endof
+        0x01 of input_buffer_move_left endof
+        0x02 of input_buffer_move_right endof
+        0x08 of input_buffer_backspace endof
+        0x7F of input_buffer_delete endof        
+        dup input_buffer_insert
+    endcase
+;
+
 : input_buffer_get_char
     begin kf_pwp c@ kf_prp c@ <> while
-            kf kf_prp c@ + c@ emit
+            kf kf_prp c@ + c@ input_buffer_process
             kf_prp dup c@ 1+ dup 16 = if 16 - then swap c!
     repeat
 ;
 
-            
-: loop begin  input_buffer_get_char  loop_exit again ;
+: loop begin input_buffer_get_char  loop_exit again ;
 
-
+1 2 + 0x30 + emit welcome

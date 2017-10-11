@@ -62,6 +62,12 @@ var_key_fifo_pwp:
     .int 0
 var_key_fifo_prp:
     .int 0
+var_input_buffer_begin:
+    .int 0
+var_input_buffer_cursor:
+    .int 0
+var_input_buffer_end:    
+    .int 0    
     
 
 	.macro next
@@ -94,6 +100,7 @@ var_key_fifo_prp:
 	.endm
     
 	.set F_IMMED, 0x80000000
+    .set input_buffer_start_addr, 0x20007000
     
 	.global test
 	.global _fini
@@ -125,7 +132,18 @@ back_setup:
     str r3, [r2]
     ldr r2, =var_key_fifo_prp    
     adds r3, r3, #1
-    str r3, [r2]    
+    str r3, [r2]
+    @@ Init input buffer variables
+    ldr r2, =var_input_buffer_begin
+    ldr r3, =init_input_buffer_start_addr
+    movs r4, #0
+    ldr r3, [r3]
+    str r4, [r3]
+    str r3, [r2]
+    ldr r2, =var_input_buffer_end
+    str r3, [r2]
+    ldr r2, =var_input_buffer_cursor
+    str r3, [r2]
     @@ Copy code from flash to ram
     ldr    r2, =__code_start__
     ldr    r3, =__ram_start__
@@ -217,6 +235,9 @@ setup_not_found:
 init_code_offset:
     .int code_offset_ram_to_flash
     .ltorg
+init_input_buffer_start_addr:
+    .int input_buffer_start_addr
+    .ltorg
 loop_hash_const:
     .int 0x96078804
     .ltorg
@@ -276,6 +297,8 @@ back_loop:
 	defword "init", 0x2ed8a004, 0, init
 main_loop:
     bl code_interpret
+    movs r1, top
+    poppsp top
     cmp r1, #0
     beq main_loop               @If neither error, nor end of buffer
     bl code_exit
@@ -449,6 +472,24 @@ not_equal:
     ldr top, =var_latest
     next
 
+    @@ ( -- 32b) top = input_buffer_begin
+    defcode "input_buffer_begin", 0x850d1312, 0, input_buffer_begin
+    pushpsp top
+    ldr top, =var_input_buffer_begin
+    next
+
+    @@ ( -- 32b) top = input_buffer_end
+    defcode "input_buffer_end", 0xe895cd10, 0, input_buffer_end
+    pushpsp top
+    ldr top, =var_input_buffer_end
+    next
+
+    @@ ( -- 32b) top = input_buffer_cursor
+    defcode "input_buffer_cursor", 0xf1563413, 0, input_buffer_cursor
+    pushpsp top
+    ldr top, =var_input_buffer_cursor
+    next
+
     @@ ( a b -- a ) drop
     defcode "drop", 0x8463cb04, 0, drop
     poppsp top
@@ -469,12 +510,21 @@ not_equal:
     ldr top, [r1]
     next
 
+    @@ ( a b c -- b c a) rot
+    defcode "rot", 0x1e134303, 0, rot
+    poppsp r1
+    poppsp r2
+    pushpsp r1 
+    pushpsp top
+    movs top, r2
+    next
+
     @@ ( a -- a a) dup
     defcode "dup", 0x1a6bd303, 0, dup
     pushpsp top
     next
 
-    @@ ( a -- 0 | a a) dup
+    @@ ( a -- 0 | a a) ?dup
     defcode "?dup", 0x8b84f804, 0, qdup
     cmp top, #0
     bne qdup_push
@@ -891,11 +941,6 @@ number_done:
 number_error:
     next
 
-    
-    defword "key", 0x1c38eb03, , key
-    
-    next
-    
     .include "./src/port.s"
     
     defcode "loop_exit", 0xf922b509, , loop_exit
@@ -931,14 +976,16 @@ number_error:
     bl code_to_cfa              @ Otherwise, compile the word
     bl code_to_mc_bl
     bl code_comma
-    movs r1, #0
+    pushpsp top
+    movs top, #0    
     exit
 interpret_execute_word:
     ldr r1, [top, #12]
     adds r1, r1, #1
     poppsp top
     blx r1
-    movs r1, #0    
+    pushpsp top
+    movs top, #0    
     exit
 interpret_word_not_found:
     bl code_number
@@ -955,20 +1002,18 @@ interpret_word_not_found:
     bl code_to_mc_bl
     bl code_comma
     bl code_comma
-    movs r1, #0
+    pushpsp top
+    movs top, #0    
     exit    
 interpret_execute_number:
-    movs r1, #0    
-    poppsp top                  @ Just put the number on TOS
+    movs top, #0    @ Just put the number on TOS
     exit
 interpret_error:
     bl code_restore_context
-    movs r1, #1
-    movs r6, #1        
+    movs top, #1    
     exit
 interpret_reach_the_end_of_buffer:
-    movs r1, #2
-    movs r6, #2            
+    movs top, #2    
     exit
     .align 2
 interpret_code_offset:
