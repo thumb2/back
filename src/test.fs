@@ -42,13 +42,13 @@ variable var_test
 ;
 
 : input_buffer_can_move_left?
-    input_buffer_cursor dup @    
+    input_buffer_cursor @    
     input_buffer_begin @
     <
 ;
 
 : input_buffer_can_move_right?
-    input_buffer_cursor dup @    
+    input_buffer_cursor @    
     input_buffer_end @
     >
 ;
@@ -85,15 +85,17 @@ variable var_test
     input_buffer_end dup @ 1- swap !
 ;
 : input_buffer_delete
-    input_buffer_end @
-    input_buffer_cursor @
-    input_buffer_raw_delete
+    input_buffer_can_move_right? if     
+        input_buffer_end @
+        input_buffer_cursor @
+        input_buffer_raw_delete
+    then
 ;
 
 : input_buffer_backspace
     input_buffer_can_move_left? if 
         input_buffer_end @
-        input_buffer_cursor @ 1- dup rot !
+        input_buffer_cursor dup @ 1- dup rot !
         input_buffer_raw_delete        
     then
 ;

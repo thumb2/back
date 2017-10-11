@@ -127,7 +127,11 @@ int to_input_buffer(char ch)
                 put_char_to_input_buffer(0x01);
             } else if (ch == 0x43) {
                 put_char_to_input_buffer(0x02);
+            } else if (ch == 0x41) {
+                /* Use up for delete */
+                put_char_to_input_buffer(0x7f);
             }
+            
             state = 0;
             break;
         }
@@ -153,7 +157,7 @@ int main (void)
         
         /* if (ch) { */
         /*     test((ch >> 4) >= 10 ? ((ch >> 4) - 10) + 'A' : (ch >> 4) + '0'); */
-        /*     test((ch & 0x0F) >= 10 ? ((ch & 0x0F) - 10) + 'A' : (ch & 0x0F) + '0');             */
+        /*     test((ch & 0x0F) >= 10 ? ((ch & 0x0F) - 10) + 'A' : (ch & 0x0F) + '0'); */
         /* } */
         
         

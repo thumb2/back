@@ -346,7 +346,7 @@ not_equal_equal:
     @@ (a b -- b < a? )
     defcode "<", 0x00003c01, 0, less_than
     poppsp r1
-    cmp r1, top
+    cmp top, r1
     blt less_than_true
     movs top, #0    
     next    
@@ -358,7 +358,7 @@ less_than_true:
     @@ (a b -- b > a? )
     defcode ">", 0x00003e01, 0, more_than
     poppsp r1
-    cmp top, r1
+    cmp r1, top
     blt more_than_true
     movs top, #0    
     next    
