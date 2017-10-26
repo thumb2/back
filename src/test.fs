@@ -102,16 +102,17 @@ variable var_test
 
 : input_buffer_enter
     0x0a
-    input_buffer_insert    
-    0x0d
-    input_buffer_insert    
-    input_buffer_begin @ 
-    inp !
-    begin interpret until
-    input_buffer_begin @
-    dup input_buffer_end !    
-    dup input_buffer_cursor !
-    0 swap c!
+    input_buffer_insert
+    edit_mode if
+    else         
+        input_buffer_begin @ 
+        inp !
+        begin interpret until
+        input_buffer_begin @
+        dup input_buffer_end !    
+        dup input_buffer_cursor !
+        0 swap c!
+    then 
 ;
 
 
@@ -120,6 +121,7 @@ variable var_test
         0x0d of input_buffer_enter endof
         0x01 of input_buffer_move_left endof
         0x02 of input_buffer_move_right endof
+        0x03 of save_word endof        
         0x08 of input_buffer_backspace endof
         0x7F of input_buffer_delete endof        
         dup input_buffer_insert
@@ -135,4 +137,4 @@ variable var_test
 
 : loop begin input_buffer_get_char  loop_exit again ;
 
-1 2 + 0x30 + emit welcome
+1 1+ 0x30 + emit

@@ -130,7 +130,10 @@ int to_input_buffer(char ch)
             } else if (ch == 0x41) {
                 /* Use up for delete */
                 put_char_to_input_buffer(0x7f);
+            } else if (ch == 0x30) {
+                put_char_to_input_buffer(0x03);
             }
+            
             
             state = 0;
             break;

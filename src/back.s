@@ -5,7 +5,7 @@
     @@ 7C00(512B) paramter stack top, empty increasing
     @@ 7B00(128B) heap
     @@ 7000(2k)   temp input buffer
-    @@ 6000(4k)   source code buffer
+    @@ 6000(4k)   user's source code buffer
     @@ 4000(8k)   code region 
     .section .return_stack
     .equ return_stack_size, 0x400 @ In fact it is the total size of r&p.
@@ -67,8 +67,19 @@ var_input_buffer_begin:
 var_input_buffer_cursor:
     .int 0
 var_input_buffer_end:    
-    .int 0    
-    
+    .int 0
+var_user_code_start_here:
+    .int 0
+var_user_code_begin:
+    .int 0
+var_user_code_end:
+    .int 0
+var_word_begin:
+    .int 0
+var_word_end:
+    .int 0
+var_edit_mode:
+    .int 0
 
 	.macro next
     bx lr   
@@ -101,6 +112,7 @@ var_input_buffer_end:
     
 	.set F_IMMED, 0x80000000
     .set input_buffer_start_addr, 0x20007000
+    .set user_code_start_addr, 0x20006000    
     
 	.global test
 	.global _fini
@@ -132,6 +144,20 @@ back_setup:
     str r3, [r2]
     ldr r2, =var_key_fifo_prp    
     adds r3, r3, #1
+    str r3, [r2]
+    @@ Init source code variables, should be excuted only when power up
+    ldr r2, =var_user_code_begin
+    ldr r3, =init_user_code_start_addr
+    str r3, [r2]
+    ldr r2, =var_user_code_end        
+    movs r4, #3
+    ldr r3, [r3]
+    strb r4, [r3]
+    adds r3, r3, #1    
+    strb r4, [r3]
+    movs r4, #0
+    adds r3, r3, #1
+    strb r4, [r3]
     str r3, [r2]
     @@ Init input buffer variables
     ldr r2, =var_input_buffer_begin
@@ -198,9 +224,17 @@ flash_to_ram_loop_end:
     ldr r1, =var_state
     movs r2, #0
     str r2, [r1]
+    ldr r1, =var_edit_mode
+    movs r2, #0
+    str r2, [r1]
     @@ Jump to ram code area
     adds r3, r3, #1
     blx r3
+    @@ Save user code here
+    ldr r1, =var_here
+    ldr r1, [r1]
+    ldr r2, =var_user_code_start_here
+    str r1, [r2]
     ldr r1, =loop_hash_const
     ldr top, [r1]
     ldr r1, =var_latest
@@ -237,6 +271,9 @@ init_code_offset:
     .ltorg
 init_input_buffer_start_addr:
     .int input_buffer_start_addr
+    .ltorg
+init_user_code_start_addr:
+    .int user_code_start_addr
     .ltorg
 loop_hash_const:
     .int 0x96078804
@@ -459,6 +496,13 @@ not_equal:
     ldr r1, =var_state
     ldr top, [r1]
     next
+    
+    @@ ( -- 32b) top = *edit_mode
+    defcode "edit_mode", 0x12907409, 0, edit_mode
+    pushpsp top
+    ldr r1, =var_edit_mode
+    ldr top, [r1]
+    next
 
     @@ ( -- 32b) top = inp
     defcode "inp", 0x1bb76b03, 0, inp
@@ -472,6 +516,25 @@ not_equal:
     ldr top, =var_latest
     next
 
+    @@ ( -- ) 
+    defcode "forget_user_code", 0xf0bfaf10, 0, forget_user_code
+    ldr r1, =var_user_code_start_here
+    ldr r1, [r1]
+    ldr r2, =var_here
+    str r1, [r2]
+    ldr r2, =var_latest
+    str r1, [r2]
+    next
+    
+    @@ ( -- ) 
+    defword "recompile_user_code", 0x6413c613, 0, recompile_user_code
+    bl code_forget_user_code
+    ldr r1, =var_inp
+    ldr r2, =var_user_code_begin
+    ldr r2, [r2]
+    str r2, [r1]
+    exit
+    
     @@ ( -- 32b) top = input_buffer_begin
     defcode "input_buffer_begin", 0x850d1312, 0, input_buffer_begin
     pushpsp top
@@ -676,6 +739,86 @@ find_not_found:
 	ldr	r1, =var_state
 	movs r2, #0
 	str	r2, [r1]	
+    next
+
+	defcode "new_word", 0x551a8908,,new_word
+    ldr r1, =var_user_code_end
+    ldr r2, [r1]
+    movs r3, #3
+    strb r3, [r2]
+    subs r2, #1
+    ldr r3, =var_word_begin
+    str r2, [r3]
+    ldr r3, =var_word_end
+    str r2, [r3]
+    adds r2, r2, #2
+    movs r3, #0
+    strb r3, [r2]
+    str r2, [r1]
+    ldr r1, =var_edit_mode
+    movs r2, #1
+    str r2, [r1]
+    next
+    
+	defcode "save_word", 0x7baca009,,save_word
+    @@ Calc the delta, r1 = delta, r6 = new word len
+    ldr r2, =var_input_buffer_begin
+    ldr r2, [r2]
+    ldr r3, =var_input_buffer_end
+    ldr r3, [r3]
+    subs r6, r3, r2
+    ldr r2, =var_word_begin
+    ldr r2, [r2]
+    ldr r3, =var_word_end
+    ldr r3, [r3]
+    subs r4, r3, r2
+    subs r1, r6, r4
+    @@ r4 = len
+    ldr r4, =var_user_code_end
+    ldr r2, [r4]
+    adds r5, r2, r1
+    str r5, [r4]
+    movs r4, r2
+    subs r4, r4, r3
+    @@ r3 = src, r2 = dst
+    adds r2, r3, r1
+    @@ delta = 0, no need to move
+    cmp r1, #0
+    beq save_word_copy_code
+    movs r5, #0
+    blt save_word_move_from_the_beginning
+save_word_move_from_the_end:    
+    ldrb r1, [r3, r4]
+    strb r1, [r2, r4]
+    subs r4, #1
+    cmp r4, #0
+    bge save_word_move_from_the_end    
+    b save_word_copy_code
+save_word_move_from_the_beginning:
+    ldrb r1, [r3, r5]
+    strb r1, [r2, r5]
+    adds r5, #1
+    cmp r5, r4
+    ble save_word_move_from_the_beginning
+save_word_copy_code:
+    @@ r3 = src, r2 = dst, r6 = len
+    ldr r3, =var_input_buffer_begin
+    ldr r3, [r3]
+    ldr r2, =var_word_begin
+    ldr r2, [r2]
+    cmp r6, #0
+    beq save_word_end
+    subs r6, #1
+save_word_copy_code_loop:
+    ldrb r1, [r3, r6]
+    strb r1, [r2, r6]
+    subs r6, #1
+    cmp r6, #0
+    bge save_word_copy_code_loop
+save_word_end:
+    ldr r1, =var_edit_mode
+    movs r2, #0
+    str r2, [r1]
     next
     
 	defcode "save_context", 0x2228c10c,,save_context
