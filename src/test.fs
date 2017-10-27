@@ -116,12 +116,21 @@ variable var_test
 ;
 
 
+: save_and_compile_word
+    save_word
+    recompile_user_code
+    begin interpret until
+    ."
+Saved
+"
+;
+    
 : input_buffer_process
     case
         0x0d of input_buffer_enter endof
         0x01 of input_buffer_move_left endof
         0x02 of input_buffer_move_right endof
-        0x03 of save_word endof        
+        0x03 of save_and_compile_word endof        
         0x08 of input_buffer_backspace endof
         0x7F of input_buffer_delete endof        
         dup input_buffer_insert
@@ -137,4 +146,4 @@ variable var_test
 
 : loop begin input_buffer_get_char  loop_exit again ;
 
-1 1+ 0x30 + emit
+welcome

@@ -70,6 +70,8 @@ var_input_buffer_end:
     .int 0
 var_user_code_start_here:
     .int 0
+var_user_code_start_latest:
+    .int 0
 var_user_code_begin:
     .int 0
 var_user_code_end:
@@ -148,10 +150,10 @@ back_setup:
     @@ Init source code variables, should be excuted only when power up
     ldr r2, =var_user_code_begin
     ldr r3, =init_user_code_start_addr
+    ldr r3, [r3]
     str r3, [r2]
     ldr r2, =var_user_code_end        
     movs r4, #3
-    ldr r3, [r3]
     strb r4, [r3]
     adds r3, r3, #1    
     strb r4, [r3]
@@ -215,7 +217,7 @@ flash_to_ram_loop_end:
     ldr r1, =var_inp
     ldr r2, =forth_file
     str r2, [r1]
-    @@ Init inp
+    @@ Init latest
     ldr r1, =var_latest
     ldr r2, =latest_link_addr
     ldr r2, [r2]
@@ -234,6 +236,10 @@ flash_to_ram_loop_end:
     ldr r1, =var_here
     ldr r1, [r1]
     ldr r2, =var_user_code_start_here
+    str r1, [r2]
+    ldr r1, =var_latest
+    ldr r1, [r1]
+    ldr r2, =var_user_code_start_latest
     str r1, [r2]
     ldr r1, =loop_hash_const
     ldr top, [r1]
@@ -522,6 +528,8 @@ not_equal:
     ldr r1, [r1]
     ldr r2, =var_here
     str r1, [r2]
+    ldr r1, =var_user_code_start_latest
+    ldr r1, [r1]
     ldr r2, =var_latest
     str r1, [r2]
     next
@@ -764,8 +772,11 @@ find_not_found:
     @@ Calc the delta, r1 = delta, r6 = new word len
     ldr r2, =var_input_buffer_begin
     ldr r2, [r2]
-    ldr r3, =var_input_buffer_end
-    ldr r3, [r3]
+    ldr r4, =var_input_buffer_cursor
+    str r2, [r4]
+    ldr r4, =var_input_buffer_end
+    ldr r3, [r4]
+    str r2, [r4]
     subs r6, r3, r2
     ldr r2, =var_word_begin
     ldr r2, [r2]
@@ -819,6 +830,9 @@ save_word_end:
     ldr r1, =var_edit_mode
     movs r2, #0
     str r2, [r1]
+    ldr r1, =var_input_buffer_begin
+    ldr r1, [r1]
+    strb r2, [r1]    
     next
     
 	defcode "save_context", 0x2228c10c,,save_context
