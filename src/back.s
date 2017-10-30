@@ -82,6 +82,8 @@ var_word_end:
     .int 0
 var_edit_mode:
     .int 0
+var_clear_input_buffer:
+    .int 0
 
 	.macro next
     bx lr   
@@ -522,6 +524,12 @@ not_equal:
     ldr top, =var_latest
     next
 
+    @@ ( -- 32b) top = clear_input_buffer
+    defcode "clear_input_buffer", 0xf9054712, 0, clear_input_buffer
+    pushpsp top
+    ldr top, =var_clear_input_buffer
+    next
+
     @@ ( -- ) 
     defcode "forget_user_code", 0xf0bfaf10, 0, forget_user_code
     ldr r1, =var_user_code_start_here
@@ -715,6 +723,77 @@ word_input_buffer_end:
     @@ Push 0 onto the param stack
     pushpsp top
     movs top, 0
+    exit
+
+    @@ ( nfa hash -- lnk / nfa 0 ) Find a word in user code, lnk = 0 if not found
+    defword "find_in_user_code", 0xf8f0c111, 0, find_in_user_code
+    ldr r1, =var_latest
+    ldr r3, =var_user_code_start_latest
+    ldr r3, [r3]
+find_in_uc_is_not_the_word:   
+    ldr r1, [r1]
+    @@ If the (link == 0), not found
+    cmp r1, r3
+    beq find_in_uc_not_found
+    adds r2, r1, #4
+    ldr r2, [r2]
+    cmp r2, top
+    bne find_in_uc_is_not_the_word
+    poppsp top
+    movs top, r1
+    exit
+find_in_uc_not_found:
+    movs top, #0
+    exit
+
+    @@ ( nfa hash -- lnk / nfa 0 ) Find a word in user code, lnk = 0 if not found
+    defword "cp_uc_to_ib", 0x5fb5660b, 0, cp_uc_to_ib
+    bl code_word
+    bl code_find_in_user_code
+    cmp top, #0
+    beq cp_uc_to_ib_end
+    adds top, #8
+    ldr top, [top]
+    movs r1, top
+cp_uc_to_ib_find_start:
+    subs r1, r1, #1
+    ldrb r2, [r1]
+    cmp r2, #03
+    bne cp_uc_to_ib_find_start
+    ldr r2, =var_word_begin
+    adds r1, r1, #1
+    str r1, [r2]
+    movs r3, r1
+    movs r1, top
+cp_uc_to_ib_find_end:    
+    adds r1, r1, #1
+    ldrb r2, [r1]
+    cmp r2, #03
+    bne cp_uc_to_ib_find_end
+    ldr r2, =var_word_end
+    str r1, [r2]
+    subs r4, r1, r3
+    subs r4, r4, #1
+    ldr r2, =var_input_buffer_begin
+    ldr r2, [r2]
+    movs r5, #0
+cp_uc_to_ib_copy:
+    ldrb r1, [r3, r5]
+    strb r1, [r2, r5]
+    adds r5, #1
+    cmp r5, r4
+    ble cp_uc_to_ib_copy
+    adds r5, r2, r5
+    ldr r1, =var_input_buffer_end
+    str r5, [r1]
+    ldr r1, =var_input_buffer_cursor
+    str r5, [r1]
+    adds r5, r5, #1
+    movs r4, #0
+    strb r4, [r5]
+    ldr r1, =var_clear_input_buffer
+    str r4, [r1]
+cp_uc_to_ib_end:    
     exit
 
     @@ ( nfa hash -- lnk / nfa 0 ) Find a word in dict list, lnk = 0 if not found

@@ -104,14 +104,18 @@ variable var_test
     0x0a
     input_buffer_insert
     edit_mode if
-    else         
+    else
+        1 clear_input_buffer !
         input_buffer_begin @ 
         inp !
         begin interpret until
-        input_buffer_begin @
-        dup input_buffer_end !    
-        dup input_buffer_cursor !
-        0 swap c!
+        clear_input_buffer @
+        if 
+            input_buffer_begin @
+            dup input_buffer_end !    
+            dup input_buffer_cursor !
+            0 swap c!
+        then
     then 
 ;
 
@@ -146,4 +150,11 @@ Saved
 
 : loop begin input_buffer_get_char  loop_exit again ;
 
-welcome
+: load_word
+    cp_uc_to_ib
+    input_buffer_begin @
+    begin dup c@ dup 0 <> while emit 1+ repeat
+    drop
+;
+
+0x31 emit
