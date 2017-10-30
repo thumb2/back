@@ -873,9 +873,9 @@ find_not_found:
     @@ r3 = src, r2 = dst
     adds r2, r3, r1
     @@ delta = 0, no need to move
+    movs r5, #0
     cmp r1, #0
     beq save_word_copy_code
-    movs r5, #0
     blt save_word_move_from_the_beginning
 save_word_move_from_the_end:    
     ldrb r1, [r3, r4]
