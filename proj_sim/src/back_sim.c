@@ -85,8 +85,8 @@ int (*init)(void);
 
 int const (* const func[4])(int) = 
 {
-    test + 1,
-    test1 + 1,
+    test,
+    test1,
     (void *)key_fifo,
     0
 };
@@ -147,7 +147,7 @@ int main (void)
     int i;
     volatile forth_table* ft;
     
-    ft = (void *)0x26000;
+    ft = (void *)0x28000;
     
 //    init = (void*)*addr;
     SystemCoreClockUpdate();

@@ -1,8 +1,8 @@
     defword "report", 0xf1c6ac06, , report    
     pushpsp top    
     ldr r2, =var_cfunc_table
-    ldr r2, [r2]             
-    ldr r2, [r2, #0]    
+    ldr r2, [r2]
+    ldr r2, [r2, #0]
     blx r2                      @ Save the caller's link, do not use bx
     cmp top, #0
     bne report_not_ready
