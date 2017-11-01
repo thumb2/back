@@ -157,4 +157,3 @@ Saved
     drop
 ;
 
-0x31 emit
