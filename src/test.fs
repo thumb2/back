@@ -56,12 +56,14 @@ variable var_test
 : input_buffer_move_left
     input_buffer_can_move_left? if
         input_buffer_cursor dup @ 1- swap !
+        0x11 emit        
     then
 ;
 
 : input_buffer_move_right
     input_buffer_can_move_right? if
         input_buffer_cursor dup @ 1+ swap !
+        0x12 emit
     then
 ;
 
@@ -93,18 +95,21 @@ variable var_test
 ;
 
 : input_buffer_backspace
-    input_buffer_can_move_left? if 
+    input_buffer_can_move_left? if
         input_buffer_end @
         input_buffer_cursor dup @ 1- dup rot !
-        input_buffer_raw_delete        
+        input_buffer_raw_delete
+        0x08 emit
     then
 ;
 
 : input_buffer_enter
-    0x0a
+    0x0f emit
+    0x0d
     input_buffer_insert
     edit_mode if
     else
+        input_buffer_end @ input_buffer_cursor !
         1 clear_input_buffer !
         input_buffer_begin @ 
         inp !
@@ -124,6 +129,7 @@ variable var_test
     save_word
     recompile_user_code
     begin interpret until
+    0x0f emit    
     ."
 Saved
 "
@@ -132,8 +138,8 @@ Saved
 : input_buffer_process
     case
         0x0d of input_buffer_enter endof
-        0x01 of input_buffer_move_left endof
-        0x02 of input_buffer_move_right endof
+        0x11 of input_buffer_move_left endof
+        0x12 of input_buffer_move_right endof
         0x03 of save_and_compile_word endof        
         0x08 of input_buffer_backspace endof
         0x7F of input_buffer_delete endof        
