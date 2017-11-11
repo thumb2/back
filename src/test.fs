@@ -29,6 +29,7 @@
 : array immediate create allot  does> compile + compile exit ;
 
 : welcome ." It's Mickey Board. I'm BACK, initiated in&by Thumb2." ;
+: goodbye ." See you soon. " ;
 
 variable var_test
 8 array array_test
@@ -141,7 +142,7 @@ variable var_test
     begin interpret until
     shell_mode @ if 
     0x0f emit    
-    ."Saved
+    ." Saved
 "
     then
     
@@ -174,4 +175,16 @@ variable var_test
     begin dup c@ dup 0 <> while emit 1+ repeat
     drop
 ;
+: bye
+    0 shell_mode !
+    goodbye
+;
 
+: shell
+    1 shell_mode !
+    welcome
+;
+
+: dummy
+    welcome
+;
