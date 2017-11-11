@@ -28,6 +28,8 @@ __param_stack_top:
     .size  __param_stack_top, . - __param_stack_top
 
     .section .back_heap
+var_shell_mode:
+    .int 0
 saved_caller_sp:
     .int 0
 saved_callee_sp:
@@ -229,7 +231,8 @@ flash_to_ram_loop_end:
     movs r2, #0
     str r2, [r1]
     ldr r1, =var_edit_mode
-    movs r2, #0
+    str r2, [r1]
+    ldr r1, =var_shell_mode
     str r2, [r1]
     @@ Jump to ram code area
     adds r3, r3, #1
@@ -505,6 +508,12 @@ not_equal:
     ldr top, [r1]
     next
     
+    @@ ( -- 32b) top = shell_mode
+    defcode "shell_mode", 0x0c18ce0a, 0, shell_mode
+    pushpsp top
+    ldr top, =var_shell_mode
+    next
+
     @@ ( -- 32b) top = *edit_mode
     defcode "edit_mode", 0x12907409, 0, edit_mode
     pushpsp top

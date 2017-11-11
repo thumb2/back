@@ -29,7 +29,7 @@
 : array immediate create allot  does> compile + compile exit ;
 
 : welcome ." It's Mickey Board. I'm BACK, initiated in&by Thumb2." ;
-: test_ascii ascii A emit ;
+
 variable var_test
 8 array array_test
 
@@ -56,19 +56,25 @@ variable var_test
 : input_buffer_move_left
     input_buffer_can_move_left? if
         input_buffer_cursor dup @ 1- swap !
-        0x11 emit        
+        shell_mode @ if 
+            0x11 emit
+        then
     then
 ;
 
 : input_buffer_move_right
     input_buffer_can_move_right? if
         input_buffer_cursor dup @ 1+ swap !
-        0x12 emit
+        shell_mode @ if         
+            0x12 emit
+        then
     then
 ;
 
 : input_buffer_insert
-    dup emit
+    shell_mode @ if 
+        dup emit
+    then
     input_buffer_cursor @
     input_buffer_end dup @ 1+ dup rot !
     begin over over <> while
@@ -99,12 +105,16 @@ variable var_test
         input_buffer_end @
         input_buffer_cursor dup @ 1- dup rot !
         input_buffer_raw_delete
-        0x08 emit
+        shell_mode @ if 
+            0x08 emit
+        then
     then
 ;
 
 : input_buffer_enter
-    0x0f emit
+    shell_mode @ if 
+        0x0f emit
+    then
     0x0d
     input_buffer_insert
     edit_mode if
@@ -129,10 +139,12 @@ variable var_test
     save_word
     recompile_user_code
     begin interpret until
+    shell_mode @ if 
     0x0f emit    
-    ."
-Saved
+    ."Saved
 "
+    then
+    
 ;
     
 : input_buffer_process
